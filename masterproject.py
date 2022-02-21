@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Nov 18 22:12:39 2020
-
-@author: ArNo1
-"""
-
 import sys
 import numpy as np
 import random
@@ -19,10 +12,15 @@ import cvxopt
 
 import time
 
+### Parameters
+
+path = 'C:/Users/Master'
+thetavalue = 10
+noise_variance = 1
+alpha = 0.05
+noise = True
 
 ### Functions
-
-path = 'C:/Users/ArNo1/Documents/Uni/Master/'
 
 threshhold = 1e-6
 def threshold(array, thresh):
@@ -107,7 +105,7 @@ def ESR(theta, thetahat):  #exact support recovery
         i += 1
     return esr
 
-def sparse_multi(X, v):
+def sparse_multi(X, v): #sparse multiplication for faster computation
     n, p1 = X.shape
     if p1 != len(v):
         raise ValueError('Dimension mismatch')
@@ -117,16 +115,7 @@ def sparse_multi(X, v):
     v_ = np.array([v[ind] for ind in indices][0])
     return X_@v_
 
-### Important Stuff
-
-#np.random.seed(123)
-#random.seed(123)
-
-thetavalue = 10
-noise_variance = 1
-alpha = 0.05
-noise = True
-
+#Model
 
 class Model:
     
@@ -321,19 +310,6 @@ def SimulateThread(s, method):
 for s in srange:
     SimulateThread(s, method)
     print('>>>Calculated' , str(s), '\n')
-
-
-# Multithreading part
-import threading
-
-#createData(n, p1range, srange)
-if __name__ == "__main__":
-    threads = list()
-    for s in srange:
-        thrd = threading.Thread(target=SimulateThread, args=(s, method,))
-        threads.append(thrd)
-        thrd.start()
-    print('Finished')
 '''
 
 def getRates(function,method,n,p1range,srange):
@@ -390,161 +366,3 @@ plt.pyplot.pcolormesh(n/np.array(p1range), srange/n, trus)
 plt.pyplot.title('{} with min {} and max {} for {}'.format(function.__code__.co_name, mini, maxi, method))
 plt.pyplot.xlabel('n/p1')
 plt.pyplot.ylabel('s/n')
-
-
-'''
-np.random.seed(123)
-n = 1000
-p1 = 250
-X = np.random.normal(0, 1, size = (n, p1))
-
-theta = np.zeros(p1)
-for i in range(25, 55):
-    theta[i]  = 10
-
-y_ = X.dot(theta)
-y = X.dot(theta) + np.random.normal(0, 1, n)
-#plt.pyplot.plot(theta, color = 'r')
-
-Ym = y - 1/np.sqrt(n)*np.mean(y)
-lam0 = np.sqrt(n)*np.linalg.norm(X.T.dot(Ym), np.inf)/np.linalg.norm(Ym, 2)
-#print(lam0)
-
-
-
-#def findlamopt(X, y, lamdas, method):
-    
-def findlamopt(X, y, method):
-    
-    def goldensect(func, xrange):
-    
-        if method == 'LASSO':
-            eps = .000001
-        if method == 'sqrtLASSO':
-            eps = .1
-            
-        a = xrange[0]
-        b = xrange[1]
-        tau = (3-np.sqrt(5))/2
-        while np.abs(b-a) > eps:
-            print(np.abs(b-a))
-            x = a + tau*(b-a)
-            y = b - tau*(b-a)
-            gx = func(x)
-            gy = func(y)
-            if gx < gy:
-                if func(a)<=gx:
-                    a = a
-                    b = x
-                if func(a)>gx:
-                    a = a
-                    b = y
-            if gx > gy:
-                if gy>=func(b):
-                    a = y
-                    b = b
-                if gy<func(b):
-                    a = x
-                    b = b
-            if gx == gy:
-                a = x
-                b = y
-        return (a+b)/2 
-    
-    if method == 'sqrtLASSO':
-        
-        def sqrtL(lam):
-            
-            thetahat = sm.regression.linear_model.OLS(y, X).fit_regularized(method  = 'sqrt_lasso', alpha = lam).params
-            return np.linalg.norm(X.dot(thetahat) - y_, ord = 2)
-        
-        #lamopt = goldensect(sqrtL, (3**(np.log10(n)))*np.array([10, 20]))
-        lamopt = goldensect(sqrtL, [0, n])
-        print(lamopt)
-    
-    if method == 'LASSO':
-        def L(lam):
-            
-            clf = linear_model.Lasso(alpha=lam, fit_intercept = True, positive = True)
-            clf.fit(X, y)
-            thetahat = clf.coef_
-            return np.linalg.norm(X.dot(thetahat) - y_, ord = 2)
-        
-        #lamopt = goldensect(L, (3**(np.log10(n)))*np.array([10, 20]))
-        lamopt = goldensect(L, [0.001, 1])
-        print(lamopt)
-    
-
-
-    errs = []
-    errmin = np.infty
-    lamopt = None
-    
-    if method == 'sqrtLASSO':
-        
-        for lam in lamdas:
-            
-            thetahat = sm.regression.linear_model.OLS(y, X).fit_regularized(method  = 'sqrt_lasso', alpha = lam).params
-            #plt.pyplot.plot(thetahat)
-            
-            error = np.linalg.norm(X.dot(thetahat) - y_, ord = 2)
-            print(error)
-            if error < errmin:
-                errmin = error
-                lamopt = lam
-            errs.append(error)
-        plt.pyplot.plot(lamdas, errs, color = 'pink')
-            
-    if method == 'LASSO':
-
-        for lam in lamdas:
-            
-            clf = linear_model.Lasso(alpha=lam, fit_intercept = True, positive = True)
-            clf.fit(X, y)
-            thetahat = clf.coef_
-            #plt.pyplot.plot(thetahat)
-            
-            error = np.linalg.norm(X.dot(thetahat) - y_, ord = 2)
-            print(error)
-            if error < errmin:
-                errmin = error
-                lamopt = lam
-            errs.append(error)
-        plt.pyplot.plot(lamdas, errs, color = 'orange')
-        
-    print('The optimal lambda is {} with an error of {}'.format(lamopt, errmin))
-'''
-
-'''
-#findlamopt(X, y, (1/3)**(np.log10(n)-2)*np.linspace(.05,.2,200), 'LASSO')
-#findlamopt(X, y, 'LASSO') 
-#findlamopt(X, y, np.linspace(30,50,25), 'sqrtLASSO')
-#findlamopt(X, y, 'sqrtLASSO')
-
-def LASSOpath(X, y):
-    
-    lamqut = (1/n)*np.linalg.norm(X.T.dot(y - np.mean(y)), ord = np.infty)
-    #lamdarange = np.linspace(lamqut, 0, 1001)[:-1]
-    lamdarange = np.logspace(np.log(lamqut), 0, 1001, base = np.e)[:-1] - 1
-    alphahats = []
-    for lam in lamdarange:
-        clf = linear_model.Lasso(alpha=lam, fit_intercept = True, positive = True, warm_start = True)
-        clf.fit(X, y)
-        alphahat = clf.coef_
-        alphahats.append(alphahat)
-    for entry in np.array(alphahats).T:
-        #plt.pyplot.plot(lamdarange, entry, color = 'black')
-        pass
-    return alphahats
-'''
-'''
-alphahats = LASSOpath(X,y)
-Xb = np.random.normal(0, 1, size = (50*n, p1))
-errs = []
-for entry in alphahats:
-    error = np.linalg.norm(Xb.dot(entry) - Xb.dot(theta), ord = 2)
-    errs.append(error)
-plt.pyplot.plot(errs)
-'''
-
-    
