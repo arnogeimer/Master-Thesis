@@ -17,6 +17,7 @@ lamb = 0.1
 thetavalue = 10
 #random.seed(123)
 #np.random.seed(123)
+
 def CreateData(n, p1, sparsity, noise):
     
     X = np.random.normal(0, noise_variance, size = (n, p1))
