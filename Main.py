@@ -5,9 +5,6 @@ import random
 import matplotlib as plt
 import DataCreate as dc
 
-#random.seed(123)
-#np.random.seed(123)
-
 #### MODEL FUNCTIONS
 
 def relu(x):
@@ -273,11 +270,3 @@ def TFmodel(Xsample,Ysample,activation,lamb,learningRate,thetavalue,sparsity_ind
     thetahat = extracttheta(w1.numpy())
     return thetahat
    
-'''
-X,Y,theta, sparsity_indexes = dc.CreateData(100, 200, 20, True)
-
-thetahat = TFmodel(X,Y,softplus,1,0.01,10,sparsity_indexes,True,ifTrain=True)
-p1 = 200
-plt.pyplot.scatter(np.linspace(0, p1-1, p1), theta.T, s = 10, color='blue')
-plt.pyplot.plot(thetahat, color = 'red')
-'''
