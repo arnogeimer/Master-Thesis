@@ -64,17 +64,6 @@ def check_entries(xtrue, y):
             result = False
     return result
 
-def TPR(theta, thetahat):
-    
-    if len(theta) != len(thetahat):
-        raise ValueError('Not the same lengths')
-        
-    PR = 0
-    for i in range(len(theta)):
-        if theta[i] != 0 and thetahat[i] != 0:
-            PR += 1
-    return PR
-
 iterations = 100
 maxIterN = 1000
 
